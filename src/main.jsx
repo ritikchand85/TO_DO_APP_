@@ -5,7 +5,7 @@ import "./styles/app.scss";
 import { createContext } from "react";
 
 export const server="https://nodejs-todoapp.onrender.com/api/v1";
-export const context= createContext({ isAuthenticated:false });
+export const Context= createContext({ isAuthenticated:false });
 
 const AppWrapper=()=>{
   const [isAuthenticated,setIsAuthenticated]=useState(false);
@@ -13,7 +13,7 @@ const AppWrapper=()=>{
   const [user,setUser]=useState({});
 
   return (
-    <context.Provider value={{
+    <Context.Provider value={{
       isAuthenticated,
       setIsAuthenticated,
       loading,
@@ -22,7 +22,7 @@ const AppWrapper=()=>{
       setUser,
     }}>
       <App />
-    </context.Provider>
+    </Context.Provider>
   );
   
 };
