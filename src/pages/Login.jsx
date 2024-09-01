@@ -1,8 +1,7 @@
-import axios from "axios";
 import React, { useContext, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, Navigate } from "react-router-dom";
-import { Context, server } from "../main";
+import { Context } from "../main";
 
 const Login = () => {
   const { isAuthenticated, setIsAuthenticated, loading, setLoading } =
@@ -15,27 +14,34 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { data } = await axios.post(
-        `${server}/users/login`,
+      const response = await fetch(
+        'https://backend-to-do-app-1.onrender.com/api/v1/users/login',
         {
-          email,
-          password,
-        },
-        {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
-          withCredentials: true,
+          credentials: 'include', // This will include cookies in the request
+          body: JSON.stringify({
+            email,
+            password,
+          }),
         }
       );
 
-      toast.success(data.message);
-      setIsAuthenticated(true);
-      setLoading(false);
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error(data.message || 'An error occurred');
+      }
     } catch (error) {
-      toast.error(error.response.data.message);
-      setLoading(false);
+      toast.error(error.message);
       setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
     }
   };
 

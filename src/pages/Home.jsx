@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
-import axios from "axios";
-import { Context, server } from "../main";   
+import { Context, server } from "../main";
 import { toast } from "react-hot-toast";
-import TodoItem from "../component/TodoItem"
+import TodoItem from "../components/TodoItem";
 import { Navigate } from "react-router-dom";
 
 const Home = () => {
@@ -16,73 +15,98 @@ const Home = () => {
 
   const updateHandler = async (id) => {
     try {
-      const { data } = await axios.put(
-        `${server}/task/${id}`,
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-
-      toast.success(data.message);
-      setRefresh((prev) => !prev);
-    } catch (error) {
-      toast.error(error.response.data.message);
-    }
-  };
-  const deleteHandler = async (id) => {
-    try {
-      const { data } = await axios.delete(`${server}/task/${id}`, {
-        withCredentials: true,
+      const response = await fetch(`${server}/task/${id}`, {
+        method: 'PUT',
+        credentials: 'include', // This will include cookies in the request
       });
 
-      toast.success(data.message);
-      setRefresh((prev) => !prev);
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message);
+        setRefresh((prev) => !prev);
+      } else {
+        throw new Error(data.message || 'An error occurred');
+      }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.message);
+    }
+  };
+
+  const deleteHandler = async (id) => {
+    try {
+      const response = await fetch(`${server}/task/${id}`, {
+        method: 'DELETE',
+        credentials: 'include', // This will include cookies in the request
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message);
+        setRefresh((prev) => !prev);
+      } else {
+        throw new Error(data.message || 'An error occurred');
+      }
+    } catch (error) {
+      toast.error(error.message);
     }
   };
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      setLoading(true);
-      const { data } = await axios.post(
-        `${server}/task/new`,
-        {
+      const response = await fetch(`${server}/task/new`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // This will include cookies in the request
+        body: JSON.stringify({
           title,
           description,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+        }),
+      });
 
-      setTitle("");
-      setDescription("");
-      toast.success(data.message);
-      setLoading(false);
-      setRefresh((prev) => !prev);
+      const data = await response.json();
+
+      if (response.ok) {
+        setTitle("");
+        setDescription("");
+        toast.success(data.message);
+        setRefresh((prev) => !prev);
+      } else {
+        throw new Error(data.message || 'An error occurred');
+      }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.message);
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    axios
-      .get(`${server}/task/my`, {
-        withCredentials: true,
-      })
-      .then((res) => {
-        setTasks(res.data.tasks);
-      })
-      .catch((e) => {
-        toast.error(e.response.data.message);
-      });
+    const fetchTasks = async () => {
+      try {
+        const response = await fetch(`${server}/task/my`, {
+          credentials: 'include', // This will include cookies in the request
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          setTasks(data.tasks);
+        } else {
+          throw new Error(data.message || 'An error occurred');
+        }
+      } catch (error) {
+        toast.error(error.message);
+      }
+    };
+
+    fetchTasks();
   }, [refresh]);
 
   if (!isAuthenticated) return <Navigate to={"/login"} />;

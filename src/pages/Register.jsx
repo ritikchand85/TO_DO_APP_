@@ -1,6 +1,5 @@
 import React, { useContext, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import axios from "axios";
 import { Context, server } from "../main";
 import toast from "react-hot-toast";
 
@@ -12,30 +11,35 @@ const Register = () => {
     useContext(Context);
 
   const submitHandler = async (e) => {
-    setLoading(true);
     e.preventDefault();
+    setLoading(true);
+
     try {
-      const { data } = await axios.post(
-        `${server}/users/new`,
-        {
+      const response = await fetch(`${server}/users/new`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include', // This will include cookies in the request
+        body: JSON.stringify({
           name,
           email,
           password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          withCredentials: true,
-        }
-      );
+        }),
+      });
 
-      toast.success(data.message);
-      setIsAuthenticated(true);
-      setLoading(false);
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message);
+        setIsAuthenticated(true);
+      } else {
+        throw new Error(data.message || 'An error occurred');
+      }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.message);
       setIsAuthenticated(false);
+    } finally {
       setLoading(false);
     }
   };

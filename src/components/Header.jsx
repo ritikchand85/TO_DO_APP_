@@ -1,4 +1,3 @@
-import axios from "axios";
 import React, { useContext } from "react";
 import { toast } from "react-hot-toast";
 import { Link } from "react-router-dom";
@@ -11,17 +10,22 @@ const Header = () => {
   const logoutHandler = async () => {
     setLoading(true);
     try {
-      await axios.get(`${server}/users/logout`, {
-        //for cors
-        withCredentials: true,
+      const response = await fetch(`${server}/users/logout`, {
+        method: 'GET',
+        credentials: 'include', // This will include cookies in the request
       });
 
-      toast.success("Logged Out Successfully");
-      setIsAuthenticated(false);
-      setLoading(false);
+      if (response.ok) {
+        toast.success("Logged Out Successfully");
+        setIsAuthenticated(false);
+      } else {
+        const data = await response.json();
+        throw new Error(data.message || 'An error occurred');
+      }
     } catch (error) {
-      toast.error(error.response.data.message);
+      toast.error(error.message);
       setIsAuthenticated(true);
+    } finally {
       setLoading(false);
     }
   };
